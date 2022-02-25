@@ -1,0 +1,29 @@
+#!/bin/bash
+
+cd /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/2016_10_12_OPTIDBS_BEJE_01/MS/ ; 
+mkdir fixel_analysis; 
+
+dwi2response -force dhollander /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/2016_10_12_OPTIDBS_BEJE_01/MS/4D_diffVF.nii.gz -fslgrad /home/gizem.temiz/data/HCP/connectomeV3/fixel_analysis/OPTIDBS_1/4D_diffVF.nii.gz.eddy_rotated_bvecs /home/gizem.temiz/data/HCP/connectomeV3/fixel_analysis/OPTIDBS_1/bvals_eddycor 
+ /export/dataCENIR/users/gizem.temiz/HCP/connectomeV3/fixel_analysis/RF_WMdhollander_OPTIDBS_1.txt /export/dataCENIR/users/gizem.temiz/HCP/connectomeV3/fixel_analysis/RF_GMdhollander_OPTIDBS_1.txt /export/dataCENIR/users/gizem.temiz/HCP/connectomeV3/fixel_analysis/RF_CSFdhollander_OPTIDBS_1.txt ; 
+
+mrresize -force /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/2016_10_12_OPTIDBS_BEJE_01/MS/4D_diffVF.nii.gz -vox 1.25 fixel_analysis/dwi_upsampled.nii.gz ; 
+dwi2mask -force fixel_analysis/dwi_upsampled.nii.gz -fslgrad /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/2016_10_12_OPTIDBS_BEJE_01/MS/4D_diffVF.nii.gz /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/2016_10_12_OPTIDBS_BEJE_01/MS/bvecs_eddycor fixel_analysis/dwi_brain_mask.nii.gz ;/export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/2016_10_12_OPTIDBS_BEJE_01/MS/bvals_eddycor 
+
+dwi2mask -force fixel_analysis/dwi_upsampled.nii.gz -fslgrad  
+mtbin -force WM_FODsdhollander.nii.gz fixel_analysis/WM_FODsdhollander_biased.nii.gz GMdhollander.nii.gz fixel_analysis/GMdhollander_biased.nii.gz CSFdhollander.nii.gz  fixel_analysis/CSFdhollander_biased.nii.gz ; 
+
+warpconvert -force -type warpfull2deformation -template /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/FOD_Template_Image_OPTIDBS.nii.gz /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/Warp_Images/WM_FODsdhollander_01.mif /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/Converted_Warps/subject2template_warp_1.mif; 
+mrregister -force fixel_analysis/WM_FODsdhollander_biased.nii.gz -mask1 fixel_analysis/dwi_brain_mask.nii.gz /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/FOD_Template_Image_OPTIDBS.nii.gz -nl_warp /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/Converted_Warps/subject2template_warp_1.mif /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/Converted_Warps/template2subject_warp_1.mif ; 
+mrtransform -force fixel_analysis/dwi_brain_mask.nii.gz -warp /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/Converted_Warps/subject2template_warp_1.mif -interp nearest fixel_analysis/dwi_brain_mask_in_template_space.nii.gz ; 
+mrconvert -force /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/FOD_Template_Image_OPTIDBS.nii.gz -coord 3 0 fixel_analysis/voxel_mask.nii.gz ; 
+mrthreshold -force fixel_analysis/voxel_mask.nii.gz fixel_analysis/voxel_mask.nii.gz ; 
+fod2fixel -force -mask fixel_analysis/voxel_mask.nii.gz -fmls_peak_value 0.2  /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/FOD_Template_Image_OPTIDBS.nii.gz fixel_mask ; 
+mrtransform -force fixel_analysis/WM_FODsdhollander_biased.nii.gz -warp /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/Converted_Warps/subject2template_warp_1.mif -noreorientation fixel_analysis/WM_FOD_in_template_space.nii.gz; 
+fod2fixel -force fixel_analysis/WM_FOD_in_template_space.nii.gz -mask fixel_analysis/voxel_mask.nii.gz  fixel_in_template_space -afd fd.mif ; 
+fixelreorient -force fixel_in_template_space /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/Converted_Warps/subject2template_warp_1.mif fixel_in_template_space ; 
+fixelcorrespondence fixel_in_template_space/fd.mif fixel_mask /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/fd_1 PRE.mif ; 
+warp2metric -force /export/dataCENIR/users/gizem.temiz/OPTIDBS/data_Sophie/JDD_Gizem_04/Template_FOD_OPTIDBS/Converted_Warps/subject2template_warp_1.mif -fc fixel_mask fc IN.mif; 
+mkdir log_fc; 
+mrcalc -force fc/IN.mif -log log_fc/IN.mif; 
+tckgen -force fixel_analysis/WM_FODsdhollander_biased.nii.gz fixel_analysis/Fixel_based_whole_brain_100M.tck -seed_dynamic fixel_analysis/voxel_mask_thresholded.nii.gz -mask fixel_analysis/voxel_mask_thresholded.nii.gz -maxlength 250 -number 100000000 -cutoff 0.1 ; 
+tcksift -force fixel_analysis/Fixel_based_whole_brain_100M.tck fixel_analysis/WM_FODsdhollander.nii.gz fixel_analysis/Fixel_based_whole_brain_10M_SIFT.tck -term_number 10000000;

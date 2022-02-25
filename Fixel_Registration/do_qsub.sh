@@ -1,0 +1,2 @@
+export jobid=`sbatch -p veryshort --qos=veryshort -N 1 --cpus-per-task=6 --job-name=Fixel_Registration   -t 1-048:00:00 --mem=128000 --export=NONE -m block:block   -o /export/dataCENIR/users/gizem.temiz/OPTIDBS/Scripts/Fixel_Registration/log-%A_%a  -e /export/dataCENIR/users/gizem.temiz/OPTIDBS/Scripts/Fixel_Registration/err-%A_%a  --array=1-4 /export/dataCENIR/users/gizem.temiz/OPTIDBS/Scripts/Fixel_Registration/do_job_array.sh |awk '{print $4}'` 
+echo submitted job $jobid
